@@ -68,8 +68,9 @@ const ClasseScreen = () => {
       <View style={styles.buttonContainer}>
         <Button title="Valider" onPress={fetchData} />
       </View>
-      <Text>Résultat de la récupération :</Text>
-      <Text>{data ? JSON.stringify(data) : 'Chargement en cours...'}</Text>
+      {//<Text>Résultat de la récupération :</Text>
+      //<Text>{data ? JSON.stringify(data) : 'Chargement en cours...'}</Text>
+    }
     </View>
   );
 };

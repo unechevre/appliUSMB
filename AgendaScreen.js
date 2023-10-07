@@ -25,8 +25,8 @@
             height: 50,
             salle: event.location,
             time: event.start.split('T')[1].substring(0, 5), // Récupérer l'heure au format 'HH:MM'
-            lat: 45, // Si les données de latitude et longitude sont disponibles dans votre JSON
-            lng: 40, // Si les données de latitude et longitude sont disponibles dans votre JSON
+            lat: 45.640517637636094, // Si les données de latitude et longitude sont disponibles dans votre JSON
+            lng: 5.8704033843112, // Si les données de latitude et longitude sont disponibles dans votre JSON
             description: event.description,
           });
         });
@@ -52,8 +52,10 @@
 
 
       const [items, setItems] = useState(transformedData);
-    
+
+
       const [selectedDay, setSelectedDay] = useState(Object.keys(items)[0]);
+      
     
       return (
         <View style={{ flex: 1 }}>
