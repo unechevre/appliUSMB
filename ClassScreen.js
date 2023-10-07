@@ -18,10 +18,15 @@ const ClasseScreen = () => {
           url: text
         }
       });
-      setData(response.data);
-      console.log(response.data)
-      // Sauvegarder les données dans AsyncStorage
-      await AsyncStorage.setItem('calendarData', JSON.stringify(response.data));
+  
+      if (response.status === 200) {
+        // Sauvegarder les données dans AsyncStorage
+        await AsyncStorage.setItem('calendarData', JSON.stringify(response.data));
+        setData(response.data);
+        console.log(response.data);
+      } else {
+        console.error('Erreur lors de la récupération des données:', response.statusText);
+      }
     } catch (error) {
       console.error('Erreur lors de la récupération des données:', error);
     }
