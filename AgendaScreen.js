@@ -1,45 +1,79 @@
-    import React, { useState } from 'react';
+    import React, { useState, useEffect } from 'react';
     import { View, TouchableOpacity, Text } from 'react-native';
     import { Agenda } from 'react-native-calendars';
     import { useNavigation } from '@react-navigation/native';
+    import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
     const AgendaScreen = () => {
     const navigation = useNavigation();
 
-    const [items, setItems] = useState({
-        '2023-10-02': 
-        [
-            { name: 'Math', height: 50, salle:'4c39', time: '09:00', lat: 45.640517637636094, lng: 5.8704033843112, description: 'Cours de maths' },
-            { name: 'chinois', height: 50, salle:'4c34', time: '10:00', lat: 45.640517637636094, lng: 5.8704033843112, description: 'Cours de maths' }
-        ],
-        '2023-10-03': [{ name: 'anglais', height: 50,salle:'8c39', time: '09:00', lat: 45.641418, lng: 5.869103, description: 'Cours de maths' }],
-        // ... autres événements
-    });
+    const [eventsData, setEventsData] = useState(null);
 
-    const [selectedDay, setSelectedDay] = useState(Object.keys(items)[0]);
 
-    return (
+    const transformEventData = (events) => {
+        const transformedData = {};
+      
+        events.forEach((event) => {
+          const eventDate = event.start.split('T')[0]; // Récupérer la date au format 'YYYY-MM-DD'
+      
+          if (!transformedData[eventDate]) {
+            transformedData[eventDate] = [];
+          }
+      
+          transformedData[eventDate].push({
+            name: event.summary,
+            height: 50,
+            salle: event.location,
+            time: event.start.split('T')[1].substring(0, 5), // Récupérer l'heure au format 'HH:MM'
+            lat: 45, // Si les données de latitude et longitude sont disponibles dans votre JSON
+            lng: 40, // Si les données de latitude et longitude sont disponibles dans votre JSON
+            description: event.description,
+          });
+        });
+        console.log(transformedData)
+        return transformedData;
+      };
+      useEffect(() => {
+        (async () => {
+          // Charger les données depuis AsyncStorage lors du chargement du composant
+          try {
+            const storedData = await AsyncStorage.getItem('calendarData');
+            if (storedData) {
+                setEventsData(JSON.parse(storedData));
+            }
+          } catch (error) {
+            console.error('Erreur lors de la récupération des données depuis AsyncStorage:', error);
+          }
+        })();
+      }, []);
+      
+
+      const transformedData = eventsData ? transformEventData(eventsData) : {};
+
+
+      const [items, setItems] = useState(transformedData);
+    
+      const [selectedDay, setSelectedDay] = useState(Object.keys(items)[0]);
+    
+      return (
         <View style={{ flex: 1 }}>
-        <Agenda
+          <Agenda
             selected={selectedDay}
             items={{ [selectedDay]: items[selectedDay] || [] }}
             onDayPress={(day) => {
-            setSelectedDay(day.dateString);
+              setSelectedDay(day.dateString);
             }}
             renderItem={(item) => {
-            return (
-                <TouchableOpacity
-                onPress={() => navigation.navigate('Map', { event: item })}
-                >
-                <View style={{ padding: 10, backgroundColor: 'lightgray', margin: 5 }}>
+              return (
+                <TouchableOpacity onPress={() => navigation.navigate('Map', { event: item })}>
+                  <View style={{ padding: 10, backgroundColor: 'lightgray', margin: 5 }}>
                     <Text>{item.name} - {item.time}</Text>
-                </View>
+                  </View>
                 </TouchableOpacity>
-            );
+              );
             }}
-        />
+          />
         </View>
-    );
+      );
     };
-
     export default AgendaScreen;
