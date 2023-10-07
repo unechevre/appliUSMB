@@ -19,18 +19,20 @@
           if (!transformedData[eventDate]) {
             transformedData[eventDate] = [];
           }
-      
-          transformedData[eventDate].push({
-            name: event.summary,
-            height: 50,
-            salle: event.location,
-            time: event.start.split('T')[1].substring(0, 5), // Récupérer l'heure au format 'HH:MM'
-            lat: 45.640517637636094, // Si les données de latitude et longitude sont disponibles dans votre JSON
-            lng: 5.8704033843112, // Si les données de latitude et longitude sont disponibles dans votre JSON
-            description: event.description,
-          });
+          
+            // Limite la description à 20 caractères
+            const limitedDescription = event.description.length > 20 ? event.description.substring(0, 20) + '...' : event.description;
+            transformedData[eventDate].push({
+                name: event.summary,
+                height: 50,
+                salle: event.location,
+                time: event.start.split('T')[1].substring(0, 5), // Récupérer l'heure au format 'HH:MM'
+                lat: 45.640517637636094, // Si les données de latitude et longitude sont disponibles dans votre JSON
+                lng: 5.8704033843112, // Si les données de latitude et longitude sont disponibles dans votre JSON
+                description: limitedDescription,
+            });
         });
-        console.log(transformedData)
+        //console.log(transformedData)
         return transformedData;
       };
       useEffect(() => {
