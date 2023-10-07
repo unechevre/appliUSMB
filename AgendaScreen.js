@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Agenda } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,7 +22,16 @@ const getInitialItemsState = () => {
   return initialItems;
 };
 
+const shiftTimeByTwoHours = (time) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const shiftedHours = (hours + 2) % 24; // Ajouter 2 heures et prendre en compte le changement de jour
+  return `${shiftedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
 const transformEventData = (events) => {
+  if (!Array.isArray(events)) {
+    console.error('Les données des événements ne sont pas valides.');
+    return {};
+  }
   return events.reduce((transformedData, event) => {
     const eventDate = event.start.split('T')[0];
     const limitedDescription = event.description.substring(0, 20);
@@ -31,14 +40,24 @@ const transformEventData = (events) => {
       transformedData[eventDate] = [];
     }
 
-    transformedData[eventDate].push({
+    const eventTimestart = shiftTimeByTwoHours(event.start.split('T')[1].substring(0, 5));
+    const eventTimeend = shiftTimeByTwoHours(event.end.split('T')[1].substring(0, 5));
+    const eventDetails = {
       name: event.summary,
       height: 50,
       salle: event.location,
-      time: event.start.split('T')[1].substring(0, 5),
+      time: eventTimestart +"-"+ eventTimeend,
       lat: event.lat,
       lng: event.lng,
       description: limitedDescription,
+    };
+
+    transformedData[eventDate].push(eventDetails);
+    transformedData[eventDate].sort((a, b) => {
+      // Tri par l'heure de départ
+      const timeA = a.time.split(':')[0];
+      const timeB = b.time.split(':')[0];
+      return timeA - timeB;
     });
 
     return transformedData;
@@ -51,17 +70,19 @@ const AgendaScreen = () => {
   const [items, setItems] = useState(getInitialItemsState);
   const [selectedDay, setSelectedDay] = useState(Object.keys(items)[0]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const storedData = await AsyncStorage.getItem('calendarData');
-        if (storedData) {
-          setEventsData(JSON.parse(storedData));
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération des données depuis AsyncStorage:', error);
+  const refreshPage = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem('calendarData');
+      if (storedData) {
+        setEventsData(JSON.parse(storedData));
       }
-    })();
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données depuis AsyncStorage:', error);
+    }
+  };
+
+  useEffect(() => {
+    refreshPage();
   }, []);
 
   useEffect(() => {
@@ -80,8 +101,20 @@ const AgendaScreen = () => {
         }}
         renderItem={(item) => <EventItem item={item} navigation={navigation} />}
       />
+      <TouchableOpacity onPress={refreshPage} style={styles.refreshButton}>
+        <Text>Rafraîchir</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+const styles = StyleSheet.create({
+  refreshButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center'
+  }
+});
 
 export default AgendaScreen;

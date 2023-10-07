@@ -19,7 +19,7 @@ const ClasseScreen = () => {
         }
       });
       setData(response.data);
-
+      console.log(response.data)
       // Sauvegarder les données dans AsyncStorage
       await AsyncStorage.setItem('calendarData', JSON.stringify(response.data));
     } catch (error) {
@@ -80,8 +80,8 @@ const ClasseScreen = () => {
       <View style={styles.buttonContainer}>
         <Button title="Valider" onPress={fetchData} />
       </View>
-      <Text>Résultat de la récupération :</Text>
-      <Text>{data ? JSON.stringify(data) : 'Chargement en cours...'}</Text>
+      {/*<Text>Résultat de la récupération :</Text>
+      <Text>{ data ? JSON.stringify(data) : 'Chargement en cours...'}</Text>*/}
     
     </View>
   );
