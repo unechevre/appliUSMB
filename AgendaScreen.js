@@ -36,8 +36,8 @@ const transformEventData = (events) => {
       height: 50,
       salle: event.location,
       time: event.start.split('T')[1].substring(0, 5),
-      lat: 45.640517637636094,
-      lng: 5.8704033843112,
+      lat: event.lat,
+      lng: event.lng,
       description: limitedDescription,
     });
 
