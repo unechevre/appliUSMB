@@ -23,7 +23,7 @@ const ClasseScreen = () => {
         // Sauvegarder les données dans AsyncStorage
         await AsyncStorage.setItem('calendarData', JSON.stringify(response.data));
         setData(response.data);
-        console.log(response.data);
+        //console.log(response.data);
       } else {
         console.error('Erreur lors de la récupération des données:', response.statusText);
       }
@@ -85,8 +85,8 @@ const ClasseScreen = () => {
       <View style={styles.buttonContainer}>
         <Button title="Valider" onPress={fetchData} />
       </View>
-      {/*<Text>Résultat de la récupération :</Text>
-      <Text>{ data ? JSON.stringify(data) : 'Chargement en cours...'}</Text>*/}
+      <Text>récupération des données :</Text>
+      <Text>{ data  ? 'Fini !' : 'en cours...'}</Text>
     
     </View>
   );

@@ -14,27 +14,19 @@ const EventItem = React.memo(({ item, navigation }) => {
   );
 });
 
-const getInitialItemsState = () => {
-  const initialItems = {};
-  // Remplir initialItems avec des données pour chaque jour (par exemple, les 100 premiers jours)
-  // ...
-
-  return initialItems;
-};
-
-
-
 const AgendaScreen = () => {
   const navigation = useNavigation();
   const [eventsData, setEventsData] = useState(null);
-  const [items, setItems] = useState(getInitialItemsState);
-  const [selectedDay, setSelectedDay] = useState(Object.keys(items)[0]);
+  const [items, setItems] = useState({});
+  const [selectedDay, setSelectedDay] = useState('');
 
   const refreshPage = async () => {
     try {
       const storedData = await AsyncStorage.getItem('calendarData');
       if (storedData) {
-        setEventsData(JSON.parse(storedData));
+        const parsedData = JSON.parse(storedData);
+        setEventsData(parsedData);
+        setSelectedDay(Object.keys(parsedData)[0]); // Sélectionner le premier jour par défaut
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des données depuis AsyncStorage:', error);
@@ -46,16 +38,18 @@ const AgendaScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (eventsData) {
-      setItems({}/*transformEventData(eventsData)*/);
+    // Filtrer les événements pour ne montrer que ceux du jour sélectionné
+    if (selectedDay && eventsData) {
+      const selectedEvents = eventsData[selectedDay] || [];
+      setItems({ [selectedDay]: selectedEvents });
     }
-  }, [eventsData]);
+  }, [selectedDay, eventsData]);
 
   return (
     <View style={{ flex: 1 }}>
       <Agenda
         selected={selectedDay}
-        items={{ [selectedDay]: items[selectedDay] || [] }}
+        items={items}
         onDayPress={(day) => {
           setSelectedDay(day.dateString);
         }}
@@ -67,6 +61,7 @@ const AgendaScreen = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   refreshButton: {
     position: 'absolute',
