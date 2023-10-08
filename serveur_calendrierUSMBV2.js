@@ -9,6 +9,54 @@ const app = express();
 // Enable CORS for all routes
 app.use(cors());
 
+const shiftTimeByTwoHours = (time) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const shiftedHours = (hours + 2) % 24; // Ajouter 2 heures et prendre en compte le changement de jour
+  return `${shiftedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+const transformEventData = (events) => {
+  if (!Array.isArray(events)) {
+    console.error('Les données des événements ne sont pas valides.');
+    return {};
+  }
+
+  const transformedData = {};
+
+  for (const event of events) {
+    const eventDate = event.start instanceof Date ? event.start.toISOString().split('T')[0] : event.start.split('T')[0];
+    const limitedDescription = event.description.substring(0, 20);
+
+    if (!transformedData[eventDate]) {
+      transformedData[eventDate] = [];
+    }
+
+    const eventTimestart = shiftTimeByTwoHours(event.start instanceof Date ? event.start.toISOString().split('T')[1].substring(0, 5) : event.start.split('T')[1].substring(0, 5));
+    const eventTimeend = shiftTimeByTwoHours(event.end instanceof Date ? event.end.toISOString().split('T')[1].substring(0, 5) : event.end.split('T')[1].substring(0, 5));
+    const eventDetails = {
+      name: event.summary,
+      height: 50,
+      salle: event.location,
+      time: eventTimestart + "-" + eventTimeend,
+      lat: event.lat,
+      lng: event.lng,
+      description: limitedDescription,
+    };
+
+    transformedData[eventDate].push(eventDetails);
+    transformedData[eventDate].sort((a, b) => {
+      // Tri par l'heure de départ
+      const timeA = a.time.split(':')[0];
+      const timeB = b.time.split(':')[0];
+      return timeA - timeB;
+    });
+  }
+
+  return transformedData;
+};
+
+
+
+
 // Importez le fichier salleData.json
 const salleData = require('./salles.json');
 // Fonction pour récupérer les valeurs de lat et lng en fonction de la salle
@@ -60,6 +108,8 @@ app.get('/recuperer_calendrier', async (req, res) => {
         }
       }
 
+      const transformedData = transformEventData(events);
+      res.json(transformedData);
       // Afficher les événements
       //events.forEach((event, index) => {
         //console.log(`Événement ${index + 1}:`);
@@ -72,7 +122,6 @@ app.get('/recuperer_calendrier', async (req, res) => {
       //});
       //console.log(events)
 
-      res.json(events);
     } else {
       return res.status(500).send('Erreur lors de la récupération du calendrier distant.');
     }
