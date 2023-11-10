@@ -1,45 +1,75 @@
-    import React, { useState } from 'react';
-    import { View, TouchableOpacity, Text } from 'react-native';
-    import { Agenda } from 'react-native-calendars';
-    import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Agenda } from 'react-native-calendars';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-    const AgendaScreen = () => {
-    const navigation = useNavigation();
+const EventItem = React.memo(({ item, navigation }) => {
+  return (
+    <TouchableOpacity onPress={() => navigation.navigate('Map', { event: item })}>
+      <View style={{ padding: 10, backgroundColor: 'lightgray', margin: 5 }}>
+        <Text>{item.name} - {item.time}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+});
 
-    const [items, setItems] = useState({
-        '2023-10-02': 
-        [
-            { name: 'Math', height: 50, salle:'4c39', time: '09:00', lat: 45.640517637636094, lng: 5.8704033843112, description: 'Cours de maths' },
-            { name: 'chinois', height: 50, salle:'4c34', time: '10:00', lat: 45.640517637636094, lng: 5.8704033843112, description: 'Cours de maths' }
-        ],
-        '2023-10-03': [{ name: 'anglais', height: 50,salle:'8c39', time: '09:00', lat: 45.641418, lng: 5.869103, description: 'Cours de maths' }],
-        // ... autres événements
-    });
+const AgendaScreen = () => {
+  const navigation = useNavigation();
+  const [eventsData, setEventsData] = useState(null);
+  const [items, setItems] = useState({});
+  const [selectedDay, setSelectedDay] = useState('');
 
-    const [selectedDay, setSelectedDay] = useState(Object.keys(items)[0]);
+  const refreshPage = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem('calendarData');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setEventsData(parsedData);
+        setSelectedDay(Object.keys(parsedData)[0]); // Sélectionner le premier jour par défaut
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données depuis AsyncStorage:', error);
+    }
+  };
 
-    return (
-        <View style={{ flex: 1 }}>
-        <Agenda
-            selected={selectedDay}
-            items={{ [selectedDay]: items[selectedDay] || [] }}
-            onDayPress={(day) => {
-            setSelectedDay(day.dateString);
-            }}
-            renderItem={(item) => {
-            return (
-                <TouchableOpacity
-                onPress={() => navigation.navigate('Map', { event: item })}
-                >
-                <View style={{ padding: 10, backgroundColor: 'lightgray', margin: 5 }}>
-                    <Text>{item.name} - {item.time}</Text>
-                </View>
-                </TouchableOpacity>
-            );
-            }}
-        />
-        </View>
-    );
-    };
+  useEffect(() => {
+    refreshPage();
+  }, []);
 
-    export default AgendaScreen;
+  useEffect(() => {
+    // Filtrer les événements pour ne montrer que ceux du jour sélectionné
+    if (selectedDay && eventsData) {
+      const selectedEvents = eventsData[selectedDay] || [];
+      setItems({ [selectedDay]: selectedEvents });
+    }
+  }, [selectedDay, eventsData]);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Agenda
+        selected={selectedDay}
+        items={items}
+        onDayPress={(day) => {
+          setSelectedDay(day.dateString);
+        }}
+        renderItem={(item) => <EventItem item={item} navigation={navigation} />}
+      />
+      <TouchableOpacity onPress={refreshPage} style={styles.refreshButton}>
+        <Text>Rafraîchir</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  refreshButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center'
+  }
+});
+
+export default AgendaScreen;

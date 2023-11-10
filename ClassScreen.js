@@ -18,10 +18,15 @@ const ClasseScreen = () => {
           url: text
         }
       });
-      setData(response.data);
-
-      // Sauvegarder les données dans AsyncStorage
-      await AsyncStorage.setItem('calendarData', JSON.stringify(response.data));
+  
+      if (response.status === 200) {
+        // Sauvegarder les données dans AsyncStorage
+        await AsyncStorage.setItem('calendarData', JSON.stringify(response.data));
+        setData(response.data);
+        //console.log(response.data);
+      } else {
+        console.error('Erreur lors de la récupération des données:', response.statusText);
+      }
     } catch (error) {
       console.error('Erreur lors de la récupération des données:', error);
     }
@@ -31,8 +36,20 @@ const ClasseScreen = () => {
     (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
       setHasPermission(status === 'granted');
+  /*
+      // Charger les données depuis AsyncStorage lors du chargement du composant
+      try {
+        const storedData = await AsyncStorage.getItem('calendarData');
+        if (storedData) {
+          setData(JSON.parse(storedData));
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données depuis AsyncStorage:', error);
+      }
+      */
     })();
   }, []);
+  
 
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
@@ -68,8 +85,9 @@ const ClasseScreen = () => {
       <View style={styles.buttonContainer}>
         <Button title="Valider" onPress={fetchData} />
       </View>
-      <Text>Résultat de la récupération :</Text>
-      <Text>{data ? JSON.stringify(data) : 'Chargement en cours...'}</Text>
+      <Text>récupération des données :</Text>
+      <Text>{ data  ? 'Fini !' : 'en cours...'}</Text>
+    
     </View>
   );
 };
