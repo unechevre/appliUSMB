@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Button } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ClasseScreen = () => {
   const [hasPermission, setHasPermission] = useState(null);
@@ -10,25 +10,27 @@ const ClasseScreen = () => {
   const [text, setText] = useState('');
   const [openScanner, setOpenScanner] = useState(false);
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://192.168.1.24:3000/recuperer_calendrier', {
+      setLoading(true); // Définir l'état de chargement à true lors de la récupération des données
+      const response = await axios.get('http://192.168.43.223:3000/recuperer_calendrier', {
         params: {
           url: text
         }
       });
-  
+
       if (response.status === 200) {
-        // Sauvegarder les données dans AsyncStorage
         await AsyncStorage.setItem('calendarData', JSON.stringify(response.data));
         setData(response.data);
-        //console.log(response.data);
       } else {
         console.error('Erreur lors de la récupération des données:', response.statusText);
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des données:', error);
+    } finally {
+      setLoading(false); // Définir l'état de chargement à false une fois la récupération terminée
     }
   };
 
@@ -36,20 +38,8 @@ const ClasseScreen = () => {
     (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
       setHasPermission(status === 'granted');
-  /*
-      // Charger les données depuis AsyncStorage lors du chargement du composant
-      try {
-        const storedData = await AsyncStorage.getItem('calendarData');
-        if (storedData) {
-          setData(JSON.parse(storedData));
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération des données depuis AsyncStorage:', error);
-      }
-      */
     })();
   }, []);
-  
 
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
@@ -85,9 +75,8 @@ const ClasseScreen = () => {
       <View style={styles.buttonContainer}>
         <Button title="Valider" onPress={fetchData} />
       </View>
-      <Text>récupération des données :</Text>
-      <Text>{ data  ? 'Fini !' : 'en cours...'}</Text>
-    
+      <Text>{loading || data ? 'Récupération des données :' : ''}</Text>
+      <Text>{loading ? 'En cours...' : data ? 'Terminé !' : ''}</Text>
     </View>
   );
 };
