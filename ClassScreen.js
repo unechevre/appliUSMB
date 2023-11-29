@@ -15,6 +15,7 @@ const ClasseScreen = () => {
   const fetchData = async () => {
     try {
       setLoading(true); // Définir l'état de chargement à true lors de la récupération des données
+      //changer l'ip selon l'endroit où ce trouve le serveur
       const response = await axios.get('http://192.168.43.223:3000/recuperer_calendrier', {
         params: {
           url: text
