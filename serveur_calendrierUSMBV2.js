@@ -11,7 +11,7 @@ app.use(cors());
 
 const shiftTimeByTwoHours = (time) => {
   const [hours, minutes] = time.split(':').map(Number);
-  const shiftedHours = (hours + 2) % 24; // Ajouter 2 heures et prendre en compte le changement de jour
+  const shiftedHours = (hours + 1) % 24; // Ajouter 1 heures et prendre en compte le changement de jour
   return `${shiftedHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 };
 const transformEventData = (events) => {
